@@ -1,0 +1,13 @@
+
+# This is my gitignore file
+
+logs/
+
+dataset/
+data/*.csv
+data/splits/*.csv
+models/*.pkl
+ppo_delivery_route_tb/
+
+
+
