@@ -41,3 +41,8 @@ python3 ./features/rlfeatureprep.py
 
 ## The final step is to run the reinforcement learning model, which will use the preprocessed and clustered data to optimize delivery routes:
 python3 ./models/reinforcementlearning.py
+
+
+## To run the scriptis in run.sh please write the following command in your terminal:
+Run the command chmod +x setup_project.sh in your terminal. This makes the script executable.
+You can run the script by typing ./setup_project.sh in your terminal. Make sure you are in the directory where the script is located.
