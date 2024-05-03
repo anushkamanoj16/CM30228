@@ -3,8 +3,6 @@
 
 logs/
 
-dataset/
-!dataset/olist_sellers_with_coordinates_dataset.csv
 data/*.csv
 !data/final_model_dataset.csv
 data/splits/*.csv
