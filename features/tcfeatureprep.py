@@ -78,5 +78,5 @@ base_path = './data/splits/'
 
 # Save the datasets
 X_train.to_csv(f'{base_path}tempclustering_train_dataset.csv', index=False)
-X_validation.to_csv(f'{base_path}tempclustering_alidation_dataset.csv', index=False)
+X_validation.to_csv(f'{base_path}tempclustering_validation_dataset.csv', index=False)
 X_test.to_csv(f'{base_path}tempclustering_test_dataset.csv', index=False)

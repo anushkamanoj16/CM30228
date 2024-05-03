@@ -23,6 +23,7 @@ echo "Data preparation complete."
 
 # Feature engineering for temporal and geospatial data
 echo "Preparing temporal and geospatial features..."
+mkdir ./data/splits
 python3 ./features/tcfeatureprep.py
 python3 ./features/gcfeatureprep.py
 echo "Features prepared."
