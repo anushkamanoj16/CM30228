@@ -24,8 +24,9 @@ final_model_dataset['estimated_delivery_accuracy'] = ((final_model_dataset['orde
 final_model_dataset['order_purchase_dayofweek'] = final_model_dataset['order_purchase_timestamp'].dt.dayofweek
 final_model_dataset['order_purchase_hour'] = final_model_dataset['order_purchase_timestamp'].dt.hour
 
+# Function to return season
 def get_season(dt):
-    Y = 2000  # dummy leap year to allow input X-02-29 (leap day)
+    Y = 2000  # dummy leap year to allow leap day
     seasons = [
         (0, (date(Y, 1, 1), date(Y, 3, 20))),  # summer
         (1, (date(Y, 3, 21), date(Y, 6, 20))),  # autumn
@@ -34,9 +35,8 @@ def get_season(dt):
         (0, (date(Y, 12, 21), date(Y, 12, 31)))  # summer again
     ]
     
-    # Ensure dt is a date object for comparison
     dt = dt.date() if isinstance(dt, datetime) else dt
-    dt = dt.replace(year=Y)  # replace with dummy year
+    dt = dt.replace(year=Y) 
     
     return next(season for season, (start, end) in seasons if start <= dt <= end)
 
@@ -52,15 +52,11 @@ duration_features = ['delivery_duration', 'approval_duration', 'carrier_handling
 # Fit the scaler on the duration features and transform the data
 final_model_dataset[duration_features] = scaler.fit_transform(final_model_dataset[duration_features])
 
-# Normalize additional features if needed
-# Example for day of the week and hour:
+# Normalize additional features 
 minmax_scaler = MinMaxScaler()
 final_model_dataset[['order_purchase_dayofweek', 'order_purchase_hour']] = minmax_scaler.fit_transform(final_model_dataset[['order_purchase_dayofweek', 'order_purchase_hour']])
 
-# Save the scaler to a file
-#joblib.dump(scaler, './models/tempclusterscaler.pkl')
-
-# Save the updated dataset with the new scaled duration features
+# Save the updated dataset 
 final_model_dataset.to_csv('./data/final_model_dataset_with_features.csv', index=False) # Currently hashed as data has already been created.
 
 # Load the newly created dataset 

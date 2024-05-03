@@ -46,3 +46,8 @@ python3 ./models/reinforcementlearning.py
 Please ensure final_model_dataset.csv is moved to the ./data directory.
 Please ensure there exists a directory calls "splits" within the data directory. 
 Please ensure olist_sellers_with_coordinates.csv is moved to the ./dataset directory.
+The run.sh script requires the following commands to be entered into you terminal in order to run:
+chmod +x run.sh
+./run.sh 
+
+Please note, if you would not like to create a virtual environment to run the project please comment out line 8-12 in run.sh.

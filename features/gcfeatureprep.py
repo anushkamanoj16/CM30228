@@ -25,9 +25,9 @@ df['delivery_timeframe'] = (df['order_delivered_customer_date'] - df['order_purc
 df['order_hour'] = df['order_purchase_timestamp'].dt.hour
 df['order_weekday'] = df['order_purchase_timestamp'].dt.dayofweek
 
-# Seasonality using your existing function
+# Function to return season
 def get_season(dt):
-    Y = 2000  # dummy leap year to allow input X-02-29 (leap day)
+    Y = 2000  # dummy leap year to allow leap year
     seasons = [
         (0, (date(Y, 1, 1), date(Y, 3, 20))),  # summer
         (1, (date(Y, 3, 21), date(Y, 6, 20))),  # autumn
@@ -38,7 +38,7 @@ def get_season(dt):
     # Convert datetime to date for comparison if necessary
     if isinstance(dt, datetime):
         dt = dt.date()
-    dt = dt.replace(year=Y)  # replace with dummy year
+    dt = dt.replace(year=Y)  
     return next(season for season, (start, end) in seasons if start <= dt <= end)
 
 df['season'] = df['order_purchase_timestamp'].apply(get_season)
@@ -67,21 +67,14 @@ standard_features_to_normalize = ['delivery_timeframe', 'distance_km', 'customer
 standard_scaler = StandardScaler()
 df[standard_features_to_normalize] = standard_scaler.fit_transform(df[standard_features_to_normalize])
 
-# Save the standard scaler for future use
-# joblib.dump(standard_scaler, './models/geoclusterscaler.pkl')
-
-# If 'order_weekday' and 'order_hour' need a different treatment, use MinMaxScaler
-minmax_features_to_normalize = ['order_hour', 'order_weekday']  # Adjust based on your requirement
+minmax_features_to_normalize = ['order_hour', 'order_weekday']  
 minmax_scaler = MinMaxScaler()
 df[minmax_features_to_normalize] = minmax_scaler.fit_transform(df[minmax_features_to_normalize])
 
-# Save the MinMax scaler for future use
-# joblib.dump(minmax_scaler, './models/geo_minmax_scaler.pkl')
 # Save the DataFrame with the new features and normalized values to a new CSV file
 new_data_path = "./data/final_gcmodel_dataset_with_features.csv"
 df.to_csv(new_data_path, index=False)
 
-# Assuming 'df' is your DataFrame after all preprocessing steps
 # Define features for clustering
 features = ['order_id','geolocation_lat', 'geolocation_lng', 'seller_latitude', 'seller_longitude', 'distance_km']
 

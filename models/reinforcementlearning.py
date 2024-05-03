@@ -25,7 +25,7 @@ def haversine(lon1, lat1, lon2, lat2):
         dlat = lat2 - lat1 
         a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
         c = 2 * asin(sqrt(a)) 
-        r = 6371 # Radius of earth in kilometers. Use 3956 for miles
+        r = 6371 # Radius of earth in kilometers. 
         return c * r
 
 class DeliveryRouteEnv(gym.Env):
@@ -40,7 +40,7 @@ class DeliveryRouteEnv(gym.Env):
             self.data = validation_data
         elif phase == 'test':
             self.data = test_data
-        self.phase = phase  # Store the phase if needed for later
+        self.phase = phase  
         self.data = self.preprocess_data()
         self.trucks_capacity = trucks_capacity
         self.speed_kph = speed_kph
@@ -48,23 +48,21 @@ class DeliveryRouteEnv(gym.Env):
         self.num_trucks = num_trucks
         self.last_delivery_accuracy = 0
         self.num_features = 12  # Total number of features in the observation space
-        self.early_delivery_bonus = 10  # Adjust as per requirement
+        self.early_delivery_bonus = 10  # Bonus for vompleting delivery before estimated date.
         self.penalty_per_km = -1  # Penalty for each kilometer traveled
         self.penalty_per_hour = -0.5  # Penalty for each hour spent
         self.penalty_per_excess_truck = -5  # Penalty for each excess truck used
         self.min_capacity_threshold = min_capacity_threshold  # Minimum capacity before considering return to depot
-        # Define your action and observation space here based on preprocessed data
         self.action_space = spaces.Discrete(self.num_delivery_points)
         self.current_delivery_index = 0  # Track the current delivery being processed
         self.simulated_time = pd.to_datetime(self.data['order_purchase_timestamp_geo'].min())  # Initialize simulated time to the first order time
-        self.total_operational_hours = 0  # New attribute for tracking operational hours
+        self.total_operational_hours = 0  # Attribute for tracking operational hours
         self.operating_hours_exceeded = False
         self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(self.num_features,), dtype=np.float32)
         # Set the depot location
         if depot_location is not None:
             self.depot_location = depot_location
         else:
-            # Assuming you select the first seller's coordinates as the depot location if not specified
             self.depot_location = (self.data['seller_latitude_geo'].iloc[0], self.data['seller_longitude_geo'].iloc[0])
 
     def step(self, action):
@@ -74,11 +72,10 @@ class DeliveryRouteEnv(gym.Env):
         self.done = self.check_if_done()
         next_state = self.get_next_state()
 
-        # Travel time calculation (assuming self.last_distance_traveled holds the last travel distance)
+        # Travel time calculation 
         travel_time_hours = self.last_distance_traveled / self.speed_kph
 
-        # Placeholder for service time (you might want to adjust this based on your specific scenario)
-        service_time_hours = 0.5  # Example fixed service time of 30 minutes
+        service_time_hours = 0.5  
 
         # Actual delivery time calculation
         delivery_time_hours = travel_time_hours + service_time_hours
@@ -89,7 +86,6 @@ class DeliveryRouteEnv(gym.Env):
         expected_delivery_date = pd.to_datetime(current_order['order_estimated_delivery_date_geo'])
 
         # Calculate hours until the expected delivery date from the order purchase timestamp
-        # This is a simplification; adjust based on the precise timing needs of your model
         expected_delivery_time_hours = (expected_delivery_date - order_purchase_timestamp).total_seconds() / 3600.0
 
         # Determine on-time status based on whether the delivery_time_hours is less than or equal to expected_delivery_time_hours
@@ -115,7 +111,6 @@ class DeliveryRouteEnv(gym.Env):
         self.total_time_elapsed = 0
         self.current_truck_capacity = self.trucks_capacity
         initial_state = self.get_initial_state()
-        # Assuming the first two elements of initial_state are lat and lng of the initial location
         self.current_location = (initial_state[0], initial_state[1])
         self.current_reward = 0
         self.last_distance_traveled = 0
@@ -132,10 +127,8 @@ class DeliveryRouteEnv(gym.Env):
             print(f"Number of Deliveries Made: {self.current_step}")
 
     def preprocess_data(self):
-        # Your existing preprocessing steps...
         self.data.sort_values(by='order_estimated_delivery_date_geo', inplace=True)
         self.data['delivery_window'] = pd.to_datetime(self.data['order_estimated_delivery_date_geo']) + pd.Timedelta(hours=2)
-        # Assuming 'geolocation_lat_geo' and 'geolocation_lng_geo' are used to identify unique delivery points
         unique_points = self.data.groupby(['geolocation_lat_geo', 'geolocation_lng_geo']).ngroups
         self.num_delivery_points = unique_points
         self.data['order_hour'] = pd.to_datetime(self.data['order_purchase_timestamp_geo']).dt.hour
@@ -156,33 +149,23 @@ class DeliveryRouteEnv(gym.Env):
     
         # Apply penalties for late deliveries based on 'estimated_delivery_accuracy'
         if self.last_delivery_accuracy < 0:
-            # Assuming late deliveries have negative 'estimated_delivery_accuracy'
             late_delivery_penalty = 10 * abs(self.last_delivery_accuracy)
             reward -= late_delivery_penalty
-    
-        # Apply penalties for using more trucks than minimum required
-        # This logic might be complex and require tracking the number of active trucks.
-    
         return reward
 
     
     def identify_next_point(self, action):
-        # Assume action corresponds to an index in a sorted list of delivery points
         next_point_id = self.sorted_delivery_points[action]
         next_point_location = self.get_location(next_point_id, "delivery")
         return next_point_id, next_point_location
 
     def calculate_distance(self, from_location, to_location):
-        """
-        Calculate the distance between two locations.
-        """
         lat1, lon1 = from_location
         lat2, lon2 = to_location
         return haversine(lon1, lat1, lon2, lat2)
     
     def get_location(self, point_id, point_type):
         # Retrieve the (latitude, longitude) of a point from the dataset
-        # The point_type can be used to differentiate between sellers and customers if necessary
         if point_type == "delivery":
             location = self.data.loc[self.data['order_id'] == point_id, ['geolocation_lat_geo', 'geolocation_lng_geo']].values[0]
         else:  # Assuming "seller" for now
@@ -195,7 +178,6 @@ class DeliveryRouteEnv(gym.Env):
         # 'estimated_delivery_accuracy' is the difference between estimated delivery and actual delivery.
         # A positive value means the delivery was made earlier than estimated, and vice versa.
         estimated_delivery_accuracy = order_row['estimated_delivery_accuracy'].values[0]
-
         # If 'estimated_delivery_accuracy' is positive, the delivery was made before the estimated time.
         if estimated_delivery_accuracy > 0:
             return self.early_delivery_bonus
@@ -206,44 +188,34 @@ class DeliveryRouteEnv(gym.Env):
         distance_km = self.calculate_distance(from_location, to_location)
         travel_time_hours = distance_km / self.speed_kph
         self.simulated_time += pd.Timedelta(hours=travel_time_hours)
-
         # Check if the operating hours have been exceeded
         if self.simulated_time.hour >= self.operating_hours:
             self.operating_hours_exceeded = True
     
     def need_to_return_to_depot(self):
-        # Decide based on truck's remaining capacity or other factors
+        # Decide based on truck's remaining capacity
         if self.current_truck_capacity <= self.min_capacity_threshold or self.time_since_last_depot_visit >= self.max_time_without_return:
             return True
         return False
         
     def return_to_depot(self):
         # Handle the process of returning to the depot
-        # This may involve resetting certain state variables or applying logistics constraints
         self.current_truck_capacity = self.trucks_capacity  # Reset capacity
         # Update location to depot's location
-        # Possibly apply time and distance penalties for the return trip
         self.total_distance_traveled += self.calculate_distance(self.current_location, self.depot_location)
         self.current_location = self.depot_location
 
     def update_truck_status(self):
-        """
-        Update the status of the truck, including capacity and location.
-        This function could be called after each delivery to update truck's remaining capacity
-        and possibly determine if it needs to return to the depot for more packages.
-        """
-        # Example logic to decrease truck capacity and check if return to depot is needed
-        self.current_truck_capacity -= 1  # Assuming each delivery decreases capacity by 1
+        self.current_truck_capacity -= 1  
         if self.need_to_return_to_depot():
             self.return_to_depot()
 
     def get_initial_state(self):
-        # Example: Assuming the first row of your data represents the initial condition
         initial_row = self.data.iloc[0]
         initial_state = np.array([
-        initial_row['geolocation_lat_geo'],  # Customer latitude
-        initial_row['geolocation_lng_geo'],  # Customer longitude
-        initial_row['order_hour'],  # Extracted from the timestamp
+        initial_row['geolocation_lat_geo'],  
+        initial_row['geolocation_lng_geo'],  
+        initial_row['order_hour'],  
         self.current_truck_capacity,
         initial_row['distance_km'],
         initial_row['estimated_delivery_accuracy'],
@@ -310,26 +282,23 @@ class DeliveryRouteEnv(gym.Env):
         if not self.done and hasattr(self, 'next_point_id') and self.next_point_id in self.data['order_id'].values:
             next_row = self.data.loc[self.data['order_id'] == self.next_point_id].iloc[0]
         else:
-            # If the episode is done or no next point is identified, use default values
-            # This part needs careful handling to ensure logical consistency
-            next_row = self.data.iloc[0]  # This is a placeholder; adjust as necessary
+            next_row = self.data.iloc[0]  
     
-        # Assuming the simulated time is always updated in the take_action or elsewhere appropriately
         self.current_order_hour = self.simulated_time.hour
     
         # Constructing the next state with all desired features
         next_state = np.array([
             next_row['geolocation_lat_geo'],
             next_row['geolocation_lng_geo'],
-            self.current_order_hour,  # Dynamically updated based on simulation time
+            self.current_order_hour,  
             self.current_truck_capacity,
-            next_row['distance_km'],  # Ensure this feature exists or is computed as needed
-            next_row['estimated_delivery_accuracy'],  # Same as above
-            next_row['delivery_duration'],  # Same as above
-            next_row['approval_duration'],  # Same as above
-            next_row['carrier_handling_duration'],  # Same as above
-            next_row['geocluster_id'],  # Same as above
-            next_row['tempcluster_id'],  # Same as above
+            next_row['distance_km'],  
+            next_row['estimated_delivery_accuracy'],  
+            next_row['delivery_duration'],  
+            next_row['approval_duration'],  
+            next_row['carrier_handling_duration'],  
+            next_row['geocluster_id'],  
+            next_row['tempcluster_id'],  
             next_row['customer_density'] ])
         return next_state
 
@@ -344,13 +313,13 @@ class DeliveryRouteEnv(gym.Env):
         return False
 
 # Initialize environment
-# Assuming your data is in a CSV file
 data_path = './data/rl_final_model_dataset.csv'
 loaded_data = pd.read_csv(data_path)
 
-# Assuming 'loaded_data' is your full dataset loaded from 'rl_final_model_dataset.csv'
+# Load dataset from 'rl_final_model_dataset.csv'
 train_data, test_data = train_test_split(loaded_data, test_size=0.3, random_state=42)
 validation_data, test_data = train_test_split(test_data, test_size=0.5, random_state=42)
+
 # Initialize environments
 train_env = DeliveryRouteEnv(data=train_data, phase='train')
 validation_env = DeliveryRouteEnv(data=validation_data, phase='validation')
@@ -364,7 +333,7 @@ eval_callback = EvalCallback(validation_env,
                              deterministic=True,
                              render=False)
 
-# Initialize the RL model with tensorboard logging
+# Initialize model with tensorboard logging
 model = PPO("MlpPolicy", train_env, verbose=1, tensorboard_log="./ppo_delivery_route_tb/")
 
 # Training the model with EvalCallback
@@ -411,7 +380,7 @@ def evaluate_model(env, model, num_episodes=100):
 
     return avg_reward, avg_distance_traveled, avg_operational_hours, avg_delivery_time, on_time_delivery_rate
 
-# Optional: Evaluate the model using your evaluate_model function for detailed analysis on any environment
+# Evaluate the model using evaluate_model.
 evaluate_model(train_env, model, num_episodes=100)
-# evaluate_model(validation_env, model, num_episodes=100)
-# evaluate_model(test_env, model, num_episodes=100)
+evaluate_model(validation_env, model, num_episodes=100)
+evaluate_model(test_env, model, num_episodes=100)

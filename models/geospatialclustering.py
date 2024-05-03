@@ -15,8 +15,7 @@ def train_and_evaluate_kmeans(features_scaled, df, n_clusters=2, n_init=10, max_
     kmeans = KMeans(n_clusters=n_clusters, init='k-means++', n_init=n_init, max_iter=max_iter, random_state=random_state)
     cluster_labels = kmeans.fit_predict(features_scaled)
     score = silhouette_score(features_scaled, cluster_labels)
-    
-    # Attach cluster IDs back to the original dataset (not the scaled features)
+    # Attach cluster IDs back to the original dataset 
     df['geocluster_id'] = cluster_labels
     
     return kmeans, score, df
@@ -26,13 +25,9 @@ if __name__ == "__main__":
     for path in file_paths:
         df, features_scaled, scaler = load_and_preprocess_data(path)
         kmeans, silhouette_score_value, df_with_clusters = train_and_evaluate_kmeans(features_scaled, df)
-        
-        # Save modified dataset with cluster IDs and original data (including order_id)
+        # Save modified dataset with cluster IDs and original data 
         modified_data_path = path.replace('.csv', '_with_clusters.csv')
         df_with_clusters.to_csv(modified_data_path, index=False)
         
         print(f"{path} - Silhouette Score: {silhouette_score_value}")
 
-    # Save models to disk
-    joblib.dump(scaler, 'models/geo_scaler.pkl')
-    joblib.dump(kmeans, 'models/geo_kmeans.pkl')

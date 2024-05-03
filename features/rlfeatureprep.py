@@ -28,10 +28,6 @@ final_merged_dataset.to_csv('./data/rl_merged_dataset.csv', index=False)
 # Load the final merged datasets
 final_merged = pd.read_csv('./data/rl_merged_dataset.csv')  
 
-# # After merging the datasets
-# print("Column names in final_merged dataset:")
-# print(final_merged.columns.tolist())
-
 # Define a list of relevant features
 relevant_features = [
     'order_id',
@@ -57,7 +53,7 @@ nan_counts = final_rl_dataset.isna().sum()
 print("NaN values report for each column:")
 print(nan_counts)
 
-# Optionally, you can also print columns with at least one NaN value
+# Print columns with at least one NaN value
 columns_with_nan = nan_counts[nan_counts > 0].index.tolist()
 if columns_with_nan:
     print("\nColumns with at least one NaN value:")

@@ -24,8 +24,7 @@ def train_and_evaluate_kmeans(data_pca, data, n_clusters=4, n_init=20, random_st
     kmeans = KMeans(n_clusters=n_clusters, n_init=n_init, random_state=random_state)
     cluster_labels = kmeans.fit_predict(data_pca)
     score = silhouette_score(data_pca, cluster_labels)
-    
-    # Attach cluster IDs back to the original data (not the scaled features)
+    # Attach cluster IDs back to the original data 
     data['tempcluster_id'] = cluster_labels
     
     return kmeans, score, data
@@ -36,14 +35,8 @@ if __name__ == "__main__":
         data, features_scaled, scaler = load_and_preprocess_data(path)
         pca, data_pca = perform_pca(features_scaled)
         kmeans, score, data_with_clusters = train_and_evaluate_kmeans(data_pca, data)
-        
-        # Save modified dataset with cluster IDs and original data (including order_id)
+        # Save modified dataset with cluster IDs and original data 
         modified_data_path = path.replace('.csv', '_with_clusters.csv')
         data_with_clusters.to_csv(modified_data_path, index=False)
         
         print(f"{path} - Silhouette Score: {score}")
-
-    # Save models to disk
-    joblib.dump(scaler, 'models/temp_scaler.pkl')
-    joblib.dump(pca, 'models/temp_pca.pkl')
-    joblib.dump(kmeans, 'models/temp_kmeans.pkl')
